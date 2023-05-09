@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Post, Comment, Like, Dislike, TeamProfile
+from .models import Post, Comment, TeamProfile
 from .forms import PostForm, CommentForm
 from django.contrib.auth import login, authenticate
 from .forms import UserRegisterForm, LoginForm
@@ -28,31 +28,28 @@ def create_post(request):
 def like_post(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     user = request.user
-    like, created = Like.objects.get_or_create(user=user, post=post)
-    if not created:
-        like.delete()
-        post.likes -= 1
+
+    if user in post.likes.all():
+        post.likes.remove(user)
     else:
-        post.likes += 1
-        Dislike.objects.filter(user=user, post=post).delete()
-        post.dislikes = max(0, post.dislikes - 1)
-    post.save()
+        post.likes.add(user)
+        post.dislikes.remove(user)
+
     return redirect('home')
 
 @login_required
 def dislike_post(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     user = request.user
-    dislike, created = Dislike.objects.get_or_create(user=user, post=post)
-    if not created:
-        dislike.delete()
-        post.dislikes -= 1
+
+    if user in post.dislikes.all():
+        post.dislikes.remove(user)
     else:
-        post.dislikes += 1
-        Like.objects.filter(user=user, post=post).delete()
-        post.likes = max(0, post.likes - 1)
-    post.save()
+        post.dislikes.add(user)
+        post.likes.remove(user)
+
     return redirect('home')
+
 
 @login_required
 def create_comment(request, post_id):
