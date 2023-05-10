@@ -44,7 +44,7 @@
                 {% endif %}
             </div>
             <div class="form-group form-check">
-                <input type="checkbox" name="{{ form.register_as_team.html_name }}" id="is_team" class="form-check-input" onclick="toggleTeamNameInput()">
+                <input type="checkbox" name="{{ form.register_as_team.html_name }}" id="{{ form.register_as_team.auto_id }}" class="form-check-input" onclick="toggleTeamNameInput()">
                 <label for="{{ form.register_as_team.auto_id }}" class="form-check-label">Register as a team</label>
             </div>
             <div class="form-group" id="team-name-group" style="display:none;">
@@ -61,7 +61,7 @@
     </div>
     <script>
         function toggleTeamNameInput() {
-            const checkBox = document.getElementById("is_team");
+            const checkBox = document.getElementById("{{ form.register_as_team.auto_id }}");
             const teamNameGroup = document.getElementById("team-name-group");
             if (checkBox.checked) {
                 teamNameGroup.style.display = "block";

@@ -86,7 +86,7 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            if form.cleaned_data['is_team']:
+            if form.cleaned_data['register_as_team']:
                 team_name = form.cleaned_data['team_name']
                 TeamProfile.objects.create(user=user, team_name=team_name)
             login(request, user)
@@ -97,21 +97,25 @@ def register(request):
         form = UserRegisterForm()
     return render(request, 'register.html', {'form': form})
 
+
 def login_view(request):
+    error_message = None
     if request.method == 'POST':
         form = LoginForm(data=request.POST)
         if form.is_valid():
-            username = request.POST['username']
-            password = request.POST['password']
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
                 return redirect('home')
-            else:
-                form.add_error(None, "Invalid username or password")
+        else:
+            error_message = "Invalid username or password"
     else:
         form = LoginForm()
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'login.html', {'form': form, 'error_message': error_message})
+
+
 
 
 def user_profile(request, username):

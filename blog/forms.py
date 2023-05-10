@@ -12,14 +12,15 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['content']
-
 class UserRegisterForm(UserCreationForm):
-    is_team = forms.BooleanField(required=False, initial=False, label="Register as a team")
-    team_name = forms.CharField(max_length=100, required=False)
+    email = forms.EmailField()
+    register_as_team = forms.BooleanField(required=False)
+    team_name = forms.CharField(max_length=30, required=False)
 
     class Meta:
         model = User
-        fields = ['username', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2', 'register_as_team', 'team_name']
+
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(label="Username", max_length=254)
