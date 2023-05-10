@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% load static %}
+{% load custom_filters %}
 
 {% block content %}
     <div class="container mt-4">
@@ -16,7 +17,8 @@
                     <p>Author: {% if post.author.username %}<a href="{% url 'user_profile' post.author.username %}" class="text-primary">{{ post.author.username }}</a>{% else %}Anonymous{% endif %}</p>
                     <p>{{ post.content|truncatechars:100 }}</p>
                     <p><i class="fas fa-thumbs-up mr-1"></i>{{ post.likes.count }} likes | <i class="fas fa-thumbs-down mr-1"></i>{{ post.dislikes.count }} dislikes</p>
-                    {% if request.user.is_authenticated %}
+                    <div class="mb-2">
+                        {% if request.user.is_authenticated %}
                         {% if request.user in post.likes.all %}
                             <a href="{% url 'like_post' post.id %}" class="btn btn-success"><i class="fas fa-thumbs-up"></i> Like</a> 
                         {% else %}
@@ -27,23 +29,49 @@
                         {% else %}
                             <a href="{% url 'dislike_post' post.id %}" class="btn btn-outline-danger"><i class="fas fa-thumbs-down"></i> Dislike</a>
                         {% endif %}
-                        {% for comment in post.comments.all %}
-                        <div class="mt-2">
-                            <p><strong><a href="{% url 'user_profile' comment.author.username %}" class="text-primary">{{ comment.author.username}}</a>:</strong> {{ comment.content }}</p>
+                    </div>    
+                        <div class="d-flex">
+                            <a href="#" class="btn btn-outline-secondary mr-2 view-comments-btn">View Comments</a>
+                            {% if post|user_can_modify:request.user %}
+                                <a href="{% url 'edit_post' post.id %}" class="btn btn-outline-info"><i class="fas fa-edit mr-2"></i>Edit</a>
+                                <a href="{% url 'delete_post' post.id %}" class="btn btn-outline-danger ml-2"><i class="fas fa-trash mr-2"></i>Delete</a>
+                            {% endif %}
                         </div>
-                        {% endfor %}
-        
-                        <form method="post" action="{% url 'create_comment' post.id %}" class="mt-2">
-                            {% csrf_token %}
-                            {{ CommentForm }}
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-comment mr-2"></i>Comment</button>
-                        </form>
-                        {% if request.user.is_superuser %}
-                            <a href="{% url 'delete_post' post.id %}" class="btn btn-outline-danger mt-2"><i class="fas fa-trash mr-2"></i>Delete</a>
-                        {% endif %}
+                        <div class="comments-container" style="display: none;">
+                            {% for comment in post.comments.all %}
+                            <div class="mt-2">
+                                <p><strong><a href="{% url 'user_profile' comment.author.username %}" class="text-primary">{{ comment.author.username}}</a>:</strong> {{ comment.content }}</p>
+                                {% if comment|user_can_modify:request.user %}
+                                    <a href="{% url 'edit_comment' comment.id %}" class="btn btn-outline-info btn-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="{% url 'delete_comment' comment.id %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash"></i></a>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+            
+                            <form method="post" action="{% url 'create_comment' post.id %}" class="mt-2">
+                                {% csrf_token %}
+                                {{ CommentForm }}
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-comment mr-2"></i>Comment</button>
+                            </form>
+                        </div>
                     {% endif %}
                 </div>
             </div>
         {% endfor %}
     </div>
+    <script>
+        document.querySelectorAll('.view-comments-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const commentsContainer = e.target.closest('.card-body').querySelector('.comments-container');
+                if (commentsContainer.style.display === 'none') {
+                    commentsContainer.style.display = 'block';
+                    e.target.textContent = 'Hide Comments';
+                } else {
+                    commentsContainer.style.display = 'none';
+                    e.target.textContent = 'View Comments';
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -1,8 +1,9 @@
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Post, Comment, TeamProfile
-from .forms import PostForm, CommentForm
+from .models import Post, Comment, TeamProfile, UserProfile
+from .forms import PostForm, CommentForm, ProfileImageForm
 from django.contrib.auth import login, authenticate
 from .forms import UserRegisterForm, LoginForm
 
@@ -66,19 +67,58 @@ def create_comment(request, post_id):
         form = CommentForm()
     return render(request, 'comment_form.html', {'form': form})
 
+
+@login_required
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if not post.user_can_modify(request.user):
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = PostForm(instance=post)
+    return render(request, 'edit_post.html', {'form': form})
+
+
 @login_required
 def delete_post(request, post_id):
-    if request.user.is_superuser:
-        post = get_object_or_404(Post, pk=post_id)
+    post = get_object_or_404(Post, pk=post_id)
+    if request.user.is_superuser or request.user == post.author:
         post.delete()
-    return redirect('home')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'home'))
+
+
+
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if not comment.user_can_modify(request.user):
+        return HttpResponseForbidden()
+
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = CommentForm(instance=comment)
+    return render(request, 'edit_comment.html', {'form': form})
+
 
 @login_required
 def delete_comment(request, comment_id):
-    if request.user.is_superuser:
-        comment = get_object_or_404(Comment, pk=comment_id)
+    comment = get_object_or_404(Comment, pk=comment_id)
+    if request.user.is_superuser or request.user == comment.author:
         comment.delete()
-    return redirect('home')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', 'home'))
+
+
 
 
 def register(request):
@@ -132,3 +172,20 @@ def user_profile(request, username):
     }
     
     return render(request, 'user_profile.html', context)
+
+
+@login_required
+def profile(request):
+    if request.method == "POST":
+        form = ProfileImageForm(request.POST, request.FILES, instance=request.user.userprofile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        try:
+            profile = request.user.userprofile
+        except UserProfile.DoesNotExist:
+            profile = UserProfile.objects.create(user=request.user)
+
+        form = ProfileImageForm(instance=profile)
+    return render(request, 'profile.html', {'form': form})
