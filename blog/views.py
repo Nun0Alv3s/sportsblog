@@ -10,7 +10,16 @@ from .forms import UserRegisterForm, LoginForm
 
 def home(request):
     posts = Post.objects.all().order_by('-pub_date')
-    return render(request, 'home.html', {'posts': posts})
+    context = {
+        'posts': posts,
+    }
+    if request.user.is_authenticated:
+        try:
+            userprofile = UserProfile.objects.get(user=request.user)
+        except UserProfile.DoesNotExist:
+            userprofile = UserProfile.objects.create(user=request.user)
+        context['userprofile'] = userprofile
+    return render(request, 'home.html', context=context)
 
 @login_required
 def create_post(request):
@@ -139,6 +148,8 @@ def register(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
     error_message = None
     if request.method == 'POST':
         form = LoginForm(data=request.POST)
@@ -188,4 +199,9 @@ def profile(request):
             profile = UserProfile.objects.create(user=request.user)
 
         form = ProfileImageForm(instance=profile)
-    return render(request, 'profile.html', {'form': form})
+    return render(request, 'profile.html', {'form': form, 'user_profile': profile})
+
+
+def landing(request):
+    return render(request, 'index.html')
+

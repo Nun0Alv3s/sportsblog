@@ -2,13 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
+from sportsblog import settings
 
 
-fs = FileSystemStorage(location='media/profile_pics')
+
+static_storage = FileSystemStorage(location=settings.STATICFILES_DIRS[0])
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='profile_pics', default='default.jpg', storage=fs)
+    image = models.ImageField(upload_to='profile_pics', default='profile_pics/default.png', storage=static_storage)
 
 class TeamProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

@@ -21,3 +21,24 @@ body {
     border-radius: 5px;
     margin-bottom: 10px;
 }
+
+.custom-file-input {
+    /* Add your custom styles here */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.main-profile-pic {
+    max-width: 250px;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 50%;  /* Add this if you want a circular image */
+}
+
+.profile-pic {
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+}
+
